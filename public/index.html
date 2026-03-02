@@ -1,0 +1,622 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>District Directory</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,400&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:       #f4f1ea;
+    --surface:  #ece8df;
+    --card:     #ffffff;
+    --ink:      #1a1812;
+    --ink2:     #5c5448;
+    --border:   #d8d2c2;
+    --accent:   #c8410a;
+    --green:    #1a6b4a;
+    --gold:     #a07010;
+    --shadow:   0 2px 12px rgba(26,24,18,0.08);
+    --shadow-lg:0 8px 32px rgba(26,24,18,0.13);
+  }
+
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--ink);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+  }
+
+  /* ── HEADER ─────────────────────────────────── */
+  header {
+    background: var(--ink);
+    padding: 0 48px;
+    height: 68px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 50;
+    box-shadow: 0 2px 20px rgba(0,0,0,0.3);
+  }
+
+  .logo {
+    display: flex; align-items: center; gap: 12px;
+  }
+
+  .logo-box {
+    width: 36px; height: 36px;
+    background: var(--accent);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px; flex-shrink: 0;
+  }
+
+  .logo-text {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800; font-size: 1.1rem;
+    color: #f4f1ea; letter-spacing: 0.3px;
+  }
+
+  .logo-sub {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.58rem; color: #7a7060;
+    letter-spacing: 2px; text-transform: uppercase; margin-top: 2px;
+  }
+
+  .status-pill {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem; letter-spacing: 1.5px;
+    padding: 5px 12px; border-radius: 20px;
+    display: flex; align-items: center; gap: 6px;
+    transition: all 0.3s;
+  }
+  .status-pill.ok     { background: rgba(26,107,74,0.15); color: #4acea8; border: 1px solid rgba(74,206,168,0.2); }
+  .status-pill.err    { background: rgba(200,65,10,0.15); color: #f08060; border: 1px solid rgba(200,65,10,0.25); }
+  .status-pill.idle   { background: rgba(255,255,255,0.05); color: #888; border: 1px solid rgba(255,255,255,0.1); }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0; }
+  .ok .status-dot   { background: #4acea8; animation: pulse 2s infinite; }
+  .err .status-dot  { background: #f08060; }
+  .idle .status-dot { background: #888; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  /* ── HERO ────────────────────────────────────── */
+  .hero {
+    background: var(--ink);
+    padding: 56px 48px 64px;
+    position: relative; overflow: hidden;
+  }
+
+  .hero::before {
+    content: '';
+    position: absolute; top: -80px; right: -80px;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(200,65,10,0.18) 0%, transparent 65%);
+    pointer-events: none;
+  }
+
+  .hero::after {
+    content: '';
+    position: absolute; bottom: -60px; left: 20%;
+    width: 300px; height: 300px;
+    background: radial-gradient(circle, rgba(26,107,74,0.12) 0%, transparent 65%);
+    pointer-events: none;
+  }
+
+  .hero-inner { max-width: 900px; margin: 0 auto; position: relative; z-index: 1; }
+
+  .hero-tag {
+    display: inline-flex; align-items: center; gap: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem; letter-spacing: 3px;
+    color: var(--accent); text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  .hero-tag::before { content: ''; width: 24px; height: 1px; background: var(--accent); }
+
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.8rem, 4.5vw, 3rem);
+    font-weight: 800;
+    color: #f4f1ea;
+    line-height: 1.1;
+    letter-spacing: -0.5px;
+    margin-bottom: 16px;
+  }
+
+  .hero h1 span { color: var(--accent); }
+
+  .hero-desc {
+    font-size: 1rem; color: #9a9080;
+    max-width: 500px; line-height: 1.65; margin-bottom: 36px;
+  }
+
+  /* ── SEARCH CARD ─────────────────────────────── */
+  .search-card {
+    background: var(--card);
+    border-radius: 14px;
+    padding: 24px 24px 20px;
+    box-shadow: var(--shadow-lg);
+    border: 1px solid rgba(255,255,255,0.08);
+    position: relative; overflow: hidden;
+  }
+
+  .search-card::before {
+    content: '';
+    position: absolute; top: 0; left: 0; right: 0; height: 3px;
+    background: linear-gradient(90deg, var(--accent) 0%, var(--gold) 50%, var(--green) 100%);
+  }
+
+  .search-grid {
+    display: grid;
+    grid-template-columns: 220px 1fr auto;
+    gap: 14px; align-items: end;
+  }
+
+  .sf label {
+    display: block;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.62rem; letter-spacing: 2px;
+    color: var(--ink2); text-transform: uppercase;
+    margin-bottom: 7px;
+  }
+
+  .select-wrap { position: relative; }
+  .select-wrap svg {
+    position: absolute; right: 11px; top: 50%;
+    transform: translateY(-50%); pointer-events: none;
+    color: var(--ink2);
+  }
+
+  select {
+    width: 100%;
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 8px; color: var(--ink);
+    font-family: 'DM Sans', sans-serif; font-size: 0.92rem;
+    padding: 10px 32px 10px 12px;
+    outline: none; cursor: pointer;
+    transition: border-color 0.18s, box-shadow 0.18s;
+    -webkit-appearance: none; appearance: none;
+  }
+  select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(200,65,10,0.1); }
+
+  .input-wrap { position: relative; }
+  .input-wrap .ico {
+    position: absolute; left: 12px; top: 50%;
+    transform: translateY(-50%); color: #b0a898; font-size: 14px;
+    pointer-events: none;
+  }
+
+  input[type="text"] {
+    width: 100%;
+    background: var(--surface); border: 1.5px solid var(--border);
+    border-radius: 8px; color: var(--ink);
+    font-family: 'DM Sans', sans-serif; font-size: 0.92rem;
+    padding: 10px 12px 10px 36px;
+    outline: none; transition: border-color 0.18s, box-shadow 0.18s;
+  }
+  input[type="text"]:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(200,65,10,0.1); }
+  input[type="text"]::placeholder { color: #b8b0a0; }
+
+  .btn-search {
+    background: var(--ink); color: #f4f1ea;
+    border: none; border-radius: 8px;
+    font-family: 'Syne', sans-serif; font-weight: 700;
+    font-size: 0.88rem; letter-spacing: 0.3px;
+    padding: 10px 22px; height: 42px;
+    cursor: pointer; display: flex; align-items: center; gap: 8px;
+    transition: all 0.18s; white-space: nowrap;
+  }
+  .btn-search:hover  { background: var(--accent); }
+  .btn-search:active { transform: scale(0.98); }
+  .btn-search:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  .search-hint {
+    margin-top: 12px;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.63rem; color: #b0a898;
+    letter-spacing: 1px; text-align: center;
+  }
+
+  /* ── CONTENT AREA ────────────────────────────── */
+  .content { max-width: 900px; margin: 0 auto; padding: 40px 24px 60px; }
+
+  /* ── RESULT META ─────────────────────────────── */
+  .result-meta {
+    display: flex; align-items: center;
+    justify-content: space-between; margin-bottom: 18px;
+  }
+
+  .result-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem; letter-spacing: 2px;
+    color: var(--ink2); text-transform: uppercase;
+  }
+
+  .result-badge {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700; font-size: 0.82rem;
+    background: rgba(26,107,74,0.09);
+    color: var(--green);
+    border: 1px solid rgba(26,107,74,0.2);
+    border-radius: 20px; padding: 4px 14px;
+  }
+
+  /* ── CARDS ───────────────────────────────────── */
+  .result-card {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: 12px;
+    overflow: hidden;
+    margin-bottom: 10px;
+    transition: box-shadow 0.2s, transform 0.2s, border-color 0.2s;
+    animation: cardIn 0.2s ease both;
+  }
+
+  .result-card:hover {
+    box-shadow: var(--shadow-lg);
+    transform: translateY(-2px);
+    border-color: rgba(200,65,10,0.25);
+  }
+
+  @keyframes cardIn { from{opacity:0;transform:translateY(10px)} to{opacity:1;transform:translateY(0)} }
+
+  .card-stripe { height: 3px; background: linear-gradient(90deg, var(--accent), var(--gold)); }
+
+  .card-inner {
+    padding: 18px 22px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 18px; align-items: center;
+  }
+
+  .card-num {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem; color: #c8c0b0;
+    min-width: 28px; text-align: right;
+    align-self: start; padding-top: 2px;
+  }
+
+  .card-main {}
+
+  .card-name {
+    font-family: 'Syne', sans-serif;
+    font-weight: 700; font-size: 1rem;
+    color: var(--ink); line-height: 1.3;
+    margin-bottom: 5px;
+  }
+
+  .card-address {
+    font-size: 0.87rem; color: var(--ink2);
+    line-height: 1.6;
+  }
+
+  .card-address em { color: #b0a898; font-style: italic; }
+
+  .district-pill {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.63rem; letter-spacing: 1px;
+    background: rgba(26,107,74,0.08);
+    color: var(--green);
+    border: 1px solid rgba(26,107,74,0.2);
+    border-radius: 20px; padding: 4px 12px;
+    white-space: nowrap; align-self: start;
+  }
+
+  /* ── STATES ──────────────────────────────────── */
+  .state {
+    text-align: center; padding: 72px 20px;
+  }
+  .state-icon { font-size: 2.8rem; margin-bottom: 16px; opacity: 0.3; }
+  .state p {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem; letter-spacing: 2px;
+    color: var(--ink2); text-transform: uppercase;
+  }
+  .state-sub {
+    font-family: 'DM Sans', sans-serif !important;
+    font-size: 0.88rem !important;
+    color: #a09880 !important; letter-spacing: 0 !important;
+    text-transform: none !important; margin-top: 8px;
+  }
+
+  .spinner {
+    width: 34px; height: 34px;
+    border: 3px solid var(--border); border-top-color: var(--accent);
+    border-radius: 50%; animation: spin 0.65s linear infinite;
+    margin: 0 auto 18px;
+  }
+  @keyframes spin { to{transform:rotate(360deg)} }
+
+  .error-card {
+    background: #fff5f3; border: 1.5px solid #f0c0b0;
+    border-radius: 12px; padding: 24px;
+    text-align: center; color: #8b3020;
+  }
+  .error-card strong { display: block; font-weight: 700; font-size: 1rem; margin-bottom: 8px; }
+  .error-card p { font-size: 0.85rem; line-height: 1.6; }
+  .error-card code { background: rgba(0,0,0,0.06); border-radius: 4px; padding: 1px 6px; font-size: 0.82rem; }
+
+  /* ── PAGINATION ──────────────────────────────── */
+  .pagination {
+    display: flex; align-items: center;
+    justify-content: center; gap: 6px; margin-top: 28px;
+  }
+
+  .pg-btn {
+    background: var(--card); border: 1.5px solid var(--border);
+    color: var(--ink); border-radius: 8px;
+    font-family: 'DM Mono', monospace; font-size: 0.75rem;
+    padding: 7px 13px; cursor: pointer; transition: all 0.18s;
+  }
+  .pg-btn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .pg-btn.active { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+  .pg-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+  .pg-gap { font-family: 'DM Mono', monospace; font-size: 0.8rem; color: var(--ink2); padding: 0 4px; }
+
+  @media (max-width: 680px) {
+    header { padding: 0 20px; }
+    .hero { padding: 36px 20px 48px; }
+    .search-grid { grid-template-columns: 1fr 1fr; }
+    .btn-search { grid-column: 1/-1; justify-content: center; height: 44px; }
+    .content { padding: 28px 16px 48px; }
+    .card-inner { grid-template-columns: 1fr auto; }
+    .card-num { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <div class="logo-box">🏛️</div>
+    <div>
+      <div class="logo-text">District Directory</div>
+      <div class="logo-sub">Public Records Search</div>
+    </div>
+  </div>
+  <div class="status-pill idle" id="statusPill">
+    <span class="status-dot"></span>
+    <span id="statusText">CONNECTING</span>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="hero-inner">
+    <div class="hero-tag">Andhra Pradesh</div>
+    <h1>Find Any Contact<br>Across Every <span>District</span></h1>
+    <p class="hero-desc">Search government offices, institutions, and officials by district and name from our public records database.</p>
+
+    <div class="search-card">
+      <div class="search-grid">
+        <div class="sf">
+          <label>District</label>
+          <div class="select-wrap">
+            <select id="districtSelect">
+              <option value="">All Districts</option>
+            </select>
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M2 4l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+        </div>
+        <div class="sf">
+          <label>Name or Keyword</label>
+          <div class="input-wrap">
+            <span class="ico">🔍</span>
+            <input type="text" id="nameInput" placeholder="e.g. Ramana, Secretary, Trust..." />
+          </div>
+        </div>
+        <div class="sf">
+          <label style="visibility:hidden">Go</label>
+          <button class="btn-search" id="searchBtn" onclick="doSearch(0)">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.5"/>
+              <path d="M9.5 9.5L12 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+            </svg>
+            Search
+          </button>
+        </div>
+      </div>
+      <div class="search-hint">Press Enter to search &nbsp;·&nbsp; Leave name blank to browse by district only</div>
+    </div>
+  </div>
+</div>
+
+<div class="content">
+  <div id="results">
+    <div class="state">
+      <div class="state-icon">🗂️</div>
+      <p>Ready to Search</p>
+      <p class="state-sub">Select a district or enter a name above to get started</p>
+    </div>
+  </div>
+</div>
+
+<script>
+  const PAGE_SIZE = 20;
+  let currentPage = 0;
+  let lastDistrict = '';
+  let lastName = '';
+
+  // ── API calls ───────────────────────────────────────────────────────────────
+  async function fetchDistricts() {
+    const res = await fetch('/api/districts');
+    if (!res.ok) throw new Error('Failed to load districts');
+    return res.json();
+  }
+
+  async function fetchSearch({ district, name, page }) {
+    const params = new URLSearchParams({ page, limit: PAGE_SIZE });
+    if (district) params.set('district', district);
+    if (name)     params.set('name', name);
+    const res = await fetch(`/api/search?${params}`);
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.detail || err.error || `Server error ${res.status}`);
+    }
+    return res.json();
+  }
+
+  // ── Init ────────────────────────────────────────────────────────────────────
+  async function init() {
+    setStatus('idle', 'CONNECTING');
+    try {
+      const { districts } = await fetchDistricts();
+      const sel = document.getElementById('districtSelect');
+      sel.innerHTML = '<option value="">All Districts</option>';
+      districts.forEach(d => {
+        const o = document.createElement('option');
+        o.value = d; o.textContent = d; sel.appendChild(o);
+      });
+      setStatus('ok', `${districts.length} DISTRICTS`);
+    } catch(e) {
+      setStatus('err', 'DB ERROR');
+      showError('Cannot reach the API', e.message);
+    }
+  }
+
+  // ── Search ──────────────────────────────────────────────────────────────────
+  async function doSearch(page = 0) {
+    const district = document.getElementById('districtSelect').value.trim();
+    const name     = document.getElementById('nameInput').value.trim();
+
+    if (!district && !name) {
+      showState('💡', 'Enter a name or select a district', 'At least one filter is required');
+      return;
+    }
+
+    lastDistrict = district;
+    lastName     = name;
+    currentPage  = page;
+
+    const btn = document.getElementById('searchBtn');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-width:2px;margin:0"></div> Searching';
+
+    showLoading();
+
+    try {
+      const data = await fetchSearch({ district, name, page });
+      renderResults(data);
+    } catch(e) {
+      showError('Search failed', e.message);
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = `<svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+      <circle cx="6" cy="6" r="4.5" stroke="currentColor" stroke-width="1.5"/>
+      <path d="M9.5 9.5L12 12" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+    </svg> Search`;
+  }
+
+  // ── Render ──────────────────────────────────────────────────────────────────
+  function renderResults({ records, total, page, limit }) {
+    const container = document.getElementById('results');
+
+    if (!records.length) {
+      container.innerHTML = `
+        <div class="state">
+          <div class="state-icon">🔍</div>
+          <p>No Records Found</p>
+          <p class="state-sub">Try a different name or district</p>
+        </div>`;
+      return;
+    }
+
+    const from = page * limit + 1;
+    const to   = Math.min((page + 1) * limit, total);
+    const totalPages = Math.ceil(total / limit);
+
+    const cards = records.map((r, i) => {
+      const num = page * limit + i + 1;
+      return `
+        <div class="result-card" style="animation-delay:${i * 0.035}s">
+          <div class="card-stripe"></div>
+          <div class="card-inner">
+            <div class="card-num">${num}</div>
+            <div class="card-main">
+              <div class="card-name">${esc(r.name)}</div>
+              <div class="card-address">${r.address ? esc(r.address) : '<em>Address not available</em>'}</div>
+            </div>
+            <div class="district-pill">${esc(r.district)}</div>
+          </div>
+        </div>`;
+    }).join('');
+
+    const pagination = totalPages > 1 ? buildPagination(page, totalPages) : '';
+
+    container.innerHTML = `
+      <div class="result-meta">
+        <span class="result-label">Showing ${from}–${to} of ${total} results</span>
+        <span class="result-badge">${total.toLocaleString()} records</span>
+      </div>
+      ${cards}
+      ${pagination}`;
+  }
+
+  function buildPagination(current, total) {
+    const pages = [];
+    const add = p => { if (p >= 0 && p < total && !pages.includes(p)) pages.push(p); };
+    [0].forEach(add);
+    [current-1, current, current+1].forEach(add);
+    [total-1].forEach(add);
+    pages.sort((a,b) => a-b);
+
+    const btns = [];
+    pages.forEach((p, i) => {
+      if (i > 0 && p - pages[i-1] > 1) btns.push('<span class="pg-gap">…</span>');
+      btns.push(`<button class="pg-btn ${p===current?'active':''}" onclick="doSearch(${p})">${p+1}</button>`);
+    });
+
+    return `<div class="pagination">
+      <button class="pg-btn" onclick="doSearch(${current-1})" ${current===0?'disabled':''}>← Prev</button>
+      ${btns.join('')}
+      <button class="pg-btn" onclick="doSearch(${current+1})" ${current>=total-1?'disabled':''}>Next →</button>
+    </div>`;
+  }
+
+  function showLoading() {
+    document.getElementById('results').innerHTML = `
+      <div class="state">
+        <div class="spinner"></div>
+        <p>Searching Records</p>
+        <p class="state-sub">Querying the database…</p>
+      </div>`;
+  }
+
+  function showError(title, detail) {
+    document.getElementById('results').innerHTML = `
+      <div class="error-card">
+        <strong>${esc(title)}</strong>
+        <p>${esc(detail)}<br><br>
+        Check the API connection and <code>DATABASE_URL</code> environment variable on Vercel.</p>
+      </div>`;
+  }
+
+  function showState(icon, msg, sub) {
+    document.getElementById('results').innerHTML = `
+      <div class="state">
+        <div class="state-icon">${icon}</div>
+        <p>${esc(msg)}</p>
+        <p class="state-sub">${esc(sub)}</p>
+      </div>`;
+  }
+
+  function setStatus(type, text) {
+    const pill = document.getElementById('statusPill');
+    pill.className = `status-pill ${type}`;
+    document.getElementById('statusText').textContent = text;
+  }
+
+  function esc(s) {
+    return String(s ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  document.getElementById('nameInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') doSearch(0);
+  });
+
+  init();
+</script>
+</body>
+</html>

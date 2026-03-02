@@ -1,0 +1,8 @@
+{
+  "name": "district-directory",
+  "version": "1.0.0",
+  "description": "District Directory Search App",
+  "dependencies": {
+    "pg": "^8.11.3"
+  }
+}
